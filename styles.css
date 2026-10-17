@@ -120,10 +120,29 @@ nav.main a.ig svg{vertical-align:middle}
 nav.main a,.brand .nm,.brand .bk{white-space:nowrap}
 nav.main ul{gap:22px;align-items:center}
 @media (max-width:1240px) and (min-width:1101px){nav.main ul{gap:16px}nav.main a{font-size:12px}nav.main a.ig span{display:none}}
-
-/* About: home photo */
-.about .photo.home{margin:0;position:relative;aspect-ratio:4/5}
-.about .photo.home img{width:100%;height:100%;object-fit:cover;object-position:52% 50%}
-.about .photo.home figcaption{position:absolute;right:8px;bottom:6px;font-size:10px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6)}
-.about .photo.home figcaption a{color:#fff;text-decoration:none}
-@media (max-width:900px){.about .photo.home{aspect-ratio:3/2}}
+/* About: text-led layout */
+.about2{padding:88px 0}
+.about2-head{text-align:center;margin-bottom:46px}
+.about2-head h2{font-size:clamp(32px,4.6vw,52px);letter-spacing:.1em;margin-bottom:.3em}
+.about2-head .role{font-family:'Aboreto',serif;text-transform:uppercase;letter-spacing:.16em;font-size:12px;margin:0}
+.about2-head::after{content:"";display:block;width:56px;height:1px;background:var(--blue);margin:26px auto 0}
+.about2-grid{display:grid;grid-template-columns:.85fr 1.15fr;gap:64px;align-items:start;max-width:1000px;margin:0 auto}
+.pull{margin:0;padding:6px 0 6px 28px;border-left:2px solid var(--blue);align-self:center}
+.pull p{font-family:'Aboreto',Georgia,serif;font-size:clamp(26px,3vw,36px);line-height:1.3;color:var(--ink);letter-spacing:.04em;margin:0 0 16px}
+.pull cite{font-style:normal;font-family:'Aboreto',serif;text-transform:uppercase;letter-spacing:.18em;font-size:12px;color:var(--blue)}
+.pull cite::before{content:"— "}
+.about2-bio{max-width:620px}
+.about2-bio p{font-size:17px;line-height:1.8;color:#5f5f5f;margin:0 0 1.15em}
+.about2-bio p:first-child::first-line{color:var(--ink)}
+.about2-contact{list-style:none;display:flex;justify-content:center;flex-wrap:wrap;gap:0;margin:54px auto 0;padding:22px 0 0;border-top:1px solid #dcdcdc;max-width:1000px}
+.about2-contact li{padding:4px 26px;border-right:1px solid #dcdcdc}.about2-contact li:last-child{border-right:0}
+.about2-contact a{display:inline-flex;align-items:center;gap:8px;color:var(--ink);text-decoration:none;font-size:14px;letter-spacing:.03em}
+.about2-contact a svg{color:var(--blue)}.about2-contact a:hover span{color:var(--blue)}
+@media (max-width:900px){
+ .about2{padding:60px 0}.about2-head{margin-bottom:30px}
+ .about2-grid{grid-template-columns:1fr;gap:28px}
+ .pull{position:static;padding-left:20px}
+ .about2-bio p{font-size:16px}
+ .about2-contact{flex-direction:column;align-items:flex-start;margin-top:34px;padding-top:16px}
+ .about2-contact li{border-right:0;padding:9px 0;border-bottom:1px solid #e3e3e3;width:100%}.about2-contact li:last-child{border-bottom:0}
+}
