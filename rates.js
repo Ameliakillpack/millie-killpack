@@ -1,4 +1,4 @@
-/* Market Trends page: reads data/market.json (written by tools/update_market_data.py).
+/* Mortgage Rates page: reads data/market.json (written by tools/update_market_data.py).
    Every number shown comes from that file; anything missing is simply not shown. */
 (function () {
   var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -19,18 +19,18 @@
   };
   function srcTag(D, key, period) {
     var s = D.sources[key]; if (!s) return '';
-    var short = { freddie: 'Freddie Mac', redfin: 'Redfin', zillow: 'Zillow', realtor: 'Realtor.com®' }[key];
+    var short = { freddie: 'Freddie Mac' }[key];
     return '<a class="stag" href="' + esc(s.url) + '" target="_blank" rel="noopener">' + short + '</a>' + (period ? ' · ' + esc(period) : '');
   }
 
   function render(D) {
+    var F = D.freddie;
     var gen = new Date(D.generated_at);
     $('updated').innerHTML = 'Updated ' + gen.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'America/Denver' }) +
-      ' · each figure shows its source and the period it covers' + (D.stale && D.stale.length ? ' · some sources could not be refreshed and show their last available release' : '');
+      ' · Freddie Mac survey released ' + (F ? day(F.as_of) : '') + (D.stale && D.stale.length ? ' · some sources could not be refreshed and show their last available release' : '');
 
     // ---- rate band
-    var F = D.freddie;
-    if (F && F.rate30 != null) {
+        if (F && F.rate30 != null) {
       var h = '<div class="rate-main"><span class="eyebrow">30-year fixed, national average</span><b>' + F.rate30.toFixed(2) + '%</b>' +
         '<span class="src">' + srcTag(D, 'freddie', 'survey released ' + day(F.as_of)) + '</span></div><div class="rate-side">';
       if (F.rate15 != null) h += '<div><span>15-year fixed</span><b>' + F.rate15.toFixed(2) + '%</b></div>';
@@ -39,51 +39,10 @@
       $('rate').innerHTML = h + '</div>';
     } else { $('rate').parentNode.parentNode.style.display = 'none'; }
 
-    // ---- at a glance
-    var out = '';
-    ['lehi', 'county', 'utah'].forEach(function (k) {
-      var R = D.redfin && D.redfin[k] && D.redfin[k].latest, Z = D.zillow && D.zillow[k], C = D.realtor && D.realtor[k] && D.realtor[k].latest;
-      var rows = [];
-      var rp = R ? span(R.period_begin, R.period_end) : '';
-      if (R && R.median_sale_price != null) rows.push(['Median sale price', money(R.median_sale_price), chg(R.median_sale_price_yoy), srcTag(D, 'redfin', rp)]);
-      if (Z && Z.value != null) rows.push(['Typical home value', money(Z.value), chg(Z.yoy), srcTag(D, 'zillow', ym(Z.as_of))]);
-      if (C && C.avg_list_price != null) rows.push(['Average list price', money(C.avg_list_price), '', srcTag(D, 'realtor', ym(C.month))]);
-      if (C && C.median_list_price != null) rows.push(['Median list price', money(C.median_list_price), chg(C.median_list_price_yoy), srcTag(D, 'realtor', ym(C.month))]);
-      if (R && R.median_dom != null) rows.push(['Median days on market', R.median_dom + ' days', chg(R.median_dom_yoy, ' days'), srcTag(D, 'redfin', rp)]);
-      if (R && R.inventory != null) rows.push(['Homes for sale (end of period)', int(R.inventory), chg(R.inventory_yoy), srcTag(D, 'redfin', rp)]);
-      if (R && R.months_supply != null) rows.push(['Months of supply', R.months_supply.toFixed(1), '', srcTag(D, 'redfin', rp)]);
-      if (R && R.homes_sold != null) rows.push(['Homes sold', int(R.homes_sold), chg(R.homes_sold_yoy), srcTag(D, 'redfin', rp)]);
-      if (R && R.sale_to_list != null) rows.push(['Avg. sale-to-list price', R.sale_to_list.toFixed(1) + '%', '', srcTag(D, 'redfin', rp)]);
-      if (!rows.length) return;
-      out += '<article class="area"><h3><i style="background:' + COL[k] + '"></i>' + esc(D.areas[k]) + '</h3><dl>';
-      rows.forEach(function (r) { out += '<div><dt>' + r[0] + '</dt><dd><b>' + r[1] + '</b>' + r[2] + '<small>' + r[3] + '</small></dd></div>'; });
-      out += '</dl>' + (k === 'lehi' && R && R.frequency === 'Rolling 3 Months' ? '<p class="src">Redfin reports city figures over rolling three-month periods.</p>' : '') + '</article>';
-    });
-    $('glance').innerHTML = out;
-    $('glance-note').textContent = 'Medians and averages from different sources use different definitions and periods, so they will not match exactly.';
-
     // ---- charts
     var asDate = function (s) { return new Date(s.length === 7 ? s + '-15T12:00:00' : s + 'T12:00:00'); };
     if (F && F.series30) chart('c-rate', [{ name: '30-year fixed', color: COL.lehi, pts: F.series30.map(function (p) { return [asDate(p[0]), p[1]]; }) }],
       function (v) { return v.toFixed(1) + '%'; }, srcTag(D, 'freddie', 'through ' + day(F.as_of)), true);
-    var rfSeries = function (idx) {
-      return ['lehi', 'county', 'utah'].filter(function (k) { return D.redfin && D.redfin[k]; }).map(function (k) {
-        return { name: D.areas[k] + (k === 'lehi' ? ' (rolling 3 mo.)' : ''), color: COL[k], dash: k === 'utah',
-          pts: D.redfin[k].series.filter(function (p) { return p[idx] != null; }).map(function (p) { return [asDate(p[0]), p[idx]]; }) };
-      });
-    };
-    if (D.redfin) {
-      var last = D.redfin.county ? D.redfin.county.latest.period_end : '';
-      chart('c-price', rfSeries(1), kmoney, srcTag(D, 'redfin', 'through ' + (last ? ym(last) : '')));
-      chart('c-supply', rfSeries(2), function (v) { return v.toFixed(1); }, srcTag(D, 'redfin', 'through ' + (last ? ym(last) : '')));
-    }
-    if (D.zillow) {
-      var zs = ['lehi', 'county', 'utah'].filter(function (k) { return D.zillow[k]; }).map(function (k) {
-        return { name: D.areas[k], color: COL[k], dash: k === 'utah', pts: D.zillow[k].series.map(function (p) { return [asDate(p[0]), p[1]]; }) };
-      });
-      var zl = D.zillow.lehi || D.zillow.county;
-      chart('c-zhvi', zs, kmoney, srcTag(D, 'zillow', 'ZHVI, through ' + ym(zl.as_of)));
-    }
 
     // ---- insights
     $('insights').innerHTML = (D.insights || []).map(function (i) {
@@ -91,14 +50,8 @@
         (i.sources && i.sources.length ? '<p class="src">Based on ' + i.sources.map(function (s) { return srcTag(D, s); }).join(', ') + ' data.</p>' : '') + '</article>';
     }).join('') + '<article class="cta-card"><h3>Let’s talk it through</h3><p>I’ll walk you through what’s selling near you and what today’s numbers mean for your plans.</p><a class="btn" href="index.html#connect">Let’s Connect</a></article>';
 
-    // ---- sources
-    var through = {
-      freddie: F ? 'weekly; latest ' + day(F.as_of) : null,
-      redfin: D.redfin && D.redfin.county ? 'monthly; latest ' + ym(D.redfin.county.latest.period_end) + ', published ' + day(D.redfin.county.latest.published) : null,
-      zillow: D.zillow && (D.zillow.lehi || D.zillow.county) ? 'monthly; latest ' + ym((D.zillow.lehi || D.zillow.county).as_of) : null,
-      realtor: D.realtor && D.realtor.county ? 'monthly; latest ' + ym(D.realtor.county.latest.month) : null
-    };
-    $('sources').innerHTML = ['freddie', 'redfin', 'zillow', 'realtor'].filter(function (k) { return D[k]; }).map(function (k) {
+    var through = { freddie: F ? 'weekly; latest ' + day(F.as_of) : null };
+    $('sources').innerHTML = ['freddie'].filter(function (k) { return D[k]; }).map(function (k) {
       var s = D.sources[k];
       return '<li><a href="' + esc(s.url) + '" target="_blank" rel="noopener">' + esc(s.name) + '</a>: ' + esc(s.credit) +
         (through[k] ? ' <span class="src">(' + esc(through[k]) + ')</span>' : '') + (D.stale && D.stale.indexOf(k) > -1 ? ' <span class="src">Not refreshed this week.</span>' : '') + '</li>';
@@ -147,6 +100,6 @@
 
   fetch('data/market.json', { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(render).catch(function () {
     $('updated').textContent = 'Market data is temporarily unavailable. Please check back soon, or contact Millie for the latest numbers.';
-    ['rate', 'glance'].forEach(function (i) { $(i).innerHTML = ''; });
+    ['rate'].forEach(function (i) { $(i).innerHTML = ''; });
   });
 })();

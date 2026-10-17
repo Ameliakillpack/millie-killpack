@@ -1,6 +1,6 @@
-# Refreshes data/market.json for the Market Trends page.
+# Refreshes data/market.json (mortgage rates) for the Mortgage Rates page (rates.html).
 # Runs every Friday at 13:00 UTC (9:00 AM EDT / 8:00 AM EST), after Freddie Mac's
-# Thursday PMMS release and Redfin's Thursday data update. Can also be run by hand
+# Thursday PMMS release. Can also be run by hand
 # from the Actions tab ("Run workflow").
 name: Update market data
 on:

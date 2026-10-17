@@ -1,24 +1,18 @@
-# Market Trends data refresh
+# Mortgage Rates data refresh
 
-`market.html` reads `data/market.json`. `tools/update_market_data.py` rebuilds that file
-from four free public sources (standard-library Python, no API keys, ~30-90 s).
+`rates.html` reads `data/market.json`. `tools/update_market_data.py` rebuilds it from
+Freddie Mac's Primary Mortgage Market Survey® history file
+(https://www.freddiemac.com/pmms/docs/PMMS_history.csv). Standard-library Python, no keys, ~2 s.
 
-| Figure | Source | Cadence | Terms (checked Oct 17, 2026) |
-|---|---|---|---|
-| 30-yr and 15-yr fixed rate, week-ago, year-ago, 5-yr chart | Freddie Mac PMMS® (`PMMS_history.csv`) | Weekly, Thursdays | "Information ... may be used with proper attribution. Alteration ... is prohibited." |
-| Median sale price, days on market, inventory, months of supply, homes sold, sale-to-list (Lehi = rolling 3 months; Utah County and Utah = monthly) | Redfin Data Center, Housing Market Tracker | Monthly (around the 7th–12th) | "You are welcome to use this data ... cite the source ... link to Redfin for the first reference" |
-| Typical home value (ZHVI), 10-yr chart | Zillow Research | Monthly (mid-month) | Aggregate research data may be displayed with attribution to Zillow Group; no implied relationship |
-| Median and average list price (Utah County and Utah) | Realtor.com® Economic Research, Inventory Core Metrics | Monthly (start of month) | Attribute to Realtor.com Economic Research and link to realtor.com/research |
+Shown: latest 30-year and 15-year fixed rates, the prior week, a year ago, the 5-year
+range and a weekly 5-year chart. Terms (checked Oct 17, 2026): Freddie Mac information
+"may be used with proper attribution"; not altered. FRED is not used (its terms limit
+copyrighted series to non-commercial use).
 
-FRED is not used: its terms limit copyrighted series (including Freddie Mac's) to non-commercial use.
-Realtor.com ZIP data for 84043 is skipped while its `quality_flag` is set.
-The UAR / ShowingTime "Local Market Update" PDFs (MLS-based, with average sale price) are
-© ShowingTime Plus and have no stated reuse license, so they are not ingested.
+Values are copied and range-checked only. If the fetch fails, the previous copy is kept
+with its own date and marked stale.
 
-Safety rules in the script: values are copied from the files, range-checked, and never filled in.
-If a source fails, the previous copy of that source is kept with its own dates and listed
-in `stale`; the page notes it. Missing metrics are hidden.
-
-Schedule: `.github/workflows/update-market-data.yml` runs every Friday 13:00 UTC and commits
-`data/market.json` only when it changed (which redeploys GitHub Pages). Run it manually from
-the Actions tab any time.
+Schedule: `.github/workflows/update-market-data.yml` runs every Friday 13:00 UTC
+(9:00 AM EDT / 8:00 AM EST), after Freddie Mac's Thursday release, and commits
+`data/market.json` when it changes. Run it manually from the Actions tab any time.
+`market.html` redirects to `rates.html`.
